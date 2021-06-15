@@ -1,6 +1,7 @@
 
 const { User } = require('../../models')
 const { generateToken } = require('../helpers/jwt')
+const { comparePass } = require('../helpers/bcrypt')
 
 
 //get all users
@@ -15,7 +16,6 @@ exports.users = async (req, res) => {
       }
     })
   } catch (error) {
-    console.log(error)
     res.status({
       status: 'Failed',
       message: 'Server not found'
@@ -45,6 +45,37 @@ exports.register = async (req, res) => {
 }
 
 //get user log in (by id)
+exports.login = async (req, res) => {
+  const { email, password } = req.body
+
+  try {
+    const user = await User.findOne({ where: { email } })
+    console.log(user)
+    if (!user || !comparePass(password, user.password)) {
+      res.send({
+        status: 'Failed',
+        message: 'Invalid Email or Password'
+      })
+    } else {
+      const token = generateToken(user)
+      res.send({
+        status: 'Success',
+        data: {
+          user: {
+            fullName: user.fullName,
+            username: user.username,
+            token
+          }
+        }
+      })
+    }
+  } catch (error) {
+    res.status({
+      status: 'Failed',
+      message: 'Server not Found'
+    })
+  }
+}
 
 //edit user
 
